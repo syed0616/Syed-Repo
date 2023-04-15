@@ -1,0 +1,111 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "Subhani-demo-ADF"
+		},
+		"ADLSgen2linkedservice_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ADLSgen2linkedservice'"
+		},
+		"AzureSqlDatabaselinkedservice_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureSqlDatabaselinkedservice'"
+		},
+		"Azureemployeedataset_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'Azureemployeedataset'"
+		},
+		"SqlServer_linkedservice_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'SqlServer_linkedservice'"
+		},
+		"subhaniStorage_Linkedservice_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'subhaniStorage_Linkedservice'"
+		},
+		"ADLSgen2linkedservice_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://datawarhouse.dfs.core.windows.net/"
+		},
+		"selfhost-IR-SUBHANI-DEMO-ADF_properties_typeProperties_linkedInfo_resourceId": {
+			"type": "string",
+			"defaultValue": "/subscriptions/20b5af83-546b-4838-9230-f739b10b8dcb/resourcegroups/Test-demo/providers/Microsoft.DataFactory/factories/Syed-ADF/integrationruntimes/SelfHost-IR"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "Subhani-demo-ADF_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"ADLSgen2linkedservice_accountKey": {
+						"value": "[parameters('ADLSgen2linkedservice_accountKey')]"
+					},
+					"AzureSqlDatabaselinkedservice_connectionString": {
+						"value": "[parameters('AzureSqlDatabaselinkedservice_connectionString')]"
+					},
+					"Azureemployeedataset_connectionString": {
+						"value": "[parameters('Azureemployeedataset_connectionString')]"
+					},
+					"subhaniStorage_Linkedservice_connectionString": {
+						"value": "[parameters('subhaniStorage_Linkedservice_connectionString')]"
+					},
+					"SqlServer_linkedservice_connectionString": {
+						"value": "[parameters('SqlServer_linkedservice_connectionString')]"
+					},
+					"ADLSgen2linkedservice_properties_typeProperties_url": {
+						"value": "[parameters('ADLSgen2linkedservice_properties_typeProperties_url')]"
+					},
+					"selfhost-IR-SUBHANI-DEMO-ADF_properties_typeProperties_linkedInfo_resourceId": {
+						"value": "[parameters('selfhost-IR-SUBHANI-DEMO-ADF_properties_typeProperties_linkedInfo_resourceId')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "Subhani-demo-ADF_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'Subhani-demo-ADF_ArmTemplate_0')]"
+			]
+		}
+	]
+}

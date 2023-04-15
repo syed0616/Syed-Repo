@@ -1,0 +1,30 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "Subhani-demo-ADF"
+		},
+		"ADLSgen2linkedservice_accountKey": {
+			"value": ""
+		},
+		"AzureSqlDatabaselinkedservice_connectionString": {
+			"value": ""
+		},
+		"Azureemployeedataset_connectionString": {
+			"value": ""
+		},
+		"SqlServer_linkedservice_connectionString": {
+			"value": ""
+		},
+		"subhaniStorage_Linkedservice_connectionString": {
+			"value": ""
+		},
+		"ADLSgen2linkedservice_properties_typeProperties_url": {
+			"value": "https://datawarhouse.dfs.core.windows.net/"
+		},
+		"selfhost-IR-SUBHANI-DEMO-ADF_properties_typeProperties_linkedInfo_resourceId": {
+			"value": "/subscriptions/20b5af83-546b-4838-9230-f739b10b8dcb/resourcegroups/Test-demo/providers/Microsoft.DataFactory/factories/Syed-ADF/integrationruntimes/SelfHost-IR"
+		}
+	}
+}

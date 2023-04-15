@@ -1,0 +1,1450 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "Subhani-demo-ADF"
+		},
+		"ADLSgen2linkedservice_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ADLSgen2linkedservice'"
+		},
+		"AzureSqlDatabaselinkedservice_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureSqlDatabaselinkedservice'"
+		},
+		"Azureemployeedataset_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'Azureemployeedataset'"
+		},
+		"SqlServer_linkedservice_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'SqlServer_linkedservice'"
+		},
+		"subhaniStorage_Linkedservice_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'subhaniStorage_Linkedservice'"
+		},
+		"ADLSgen2linkedservice_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://datawarhouse.dfs.core.windows.net/"
+		},
+		"selfhost-IR-SUBHANI-DEMO-ADF_properties_typeProperties_linkedInfo_resourceId": {
+			"type": "string",
+			"defaultValue": "/subscriptions/20b5af83-546b-4838-9230-f739b10b8dcb/resourcegroups/Test-demo/providers/Microsoft.DataFactory/factories/Syed-ADF/integrationruntimes/SelfHost-IR"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/Joins')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Joins",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "Joins",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"factinternetTable": {},
+									"dimCustomer": {},
+									"dimproductcategory": {},
+									"dimproductsubcategory": {},
+									"ADLSgen2": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-04-09T06:47:11Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/Joins')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SCD Type2')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "SCD type2",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "SCD type2",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"NTemployee": {},
+									"Azureemployeetable": {},
+									"sinkAzuretable": {},
+									"sinkAzuretableupdated": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-04-06T10:18:10Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/SCD type2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/copy data from ADF db to ADLSgen2')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Lookup get all table  names  from ms aql server",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "AlltablesDB_dataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "Filter",
+						"type": "Filter",
+						"dependsOn": [
+							{
+								"activity": "Lookup get all table  names  from ms aql server",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Lookup get all table  names  from ms aql server').output.value",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@startswith(item().Table_Name,'DIM')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "copy DIM data from sql server o adls  gen2",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Filter",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Filter').output.Value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Copy data from sql server dim tables",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlServerSource",
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".txt"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "MSserveverCopyTables_dataset",
+											"type": "DatasetReference",
+											"parameters": {
+												"copyTableNames": {
+													"value": "@item().Table_Name",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "Target_ADLSgen2_dataset",
+											"type": "DatasetReference",
+											"parameters": {
+												"P_DSFileName": {
+													"value": "@concat(item().Table_Name,'.csv')",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"Tablenames": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-04-04T12:40:25Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/AlltablesDB_dataset')]",
+				"[concat(variables('factoryId'), '/datasets/MSserveverCopyTables_dataset')]",
+				"[concat(variables('factoryId'), '/datasets/Target_ADLSgen2_dataset')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/copy data from msserverdb to Azure server')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Lookup get all table  names  from ms aql server",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "AlltablesDB_dataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "Filter",
+						"type": "Filter",
+						"dependsOn": [
+							{
+								"activity": "Lookup get all table  names  from ms aql server",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Lookup get all table  names  from ms aql server').output.value",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@startswith(item().Table_Name,'DIM')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "copy DIM data from sql server to azure server",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Filter",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Filter').output.Value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Copy data from sql server dim tables to Azure server",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlServerSource",
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "AzureSqlSink",
+											"writeBehavior": "insert",
+											"sqlWriterUseTableLock": false,
+											"tableOption": "autoCreate",
+											"disableMetricsCollection": false
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "MSserveverCopyTables_dataset",
+											"type": "DatasetReference",
+											"parameters": {
+												"copyTableNames": {
+													"value": "@item().Table_Name",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "TARGETAzureSql_DS",
+											"type": "DatasetReference",
+											"parameters": {
+												"p_azureTablename": {
+													"value": "@item().Table_Name",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"Tablenames": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-04-05T13:51:52Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/AlltablesDB_dataset')]",
+				"[concat(variables('factoryId'), '/datasets/MSserveverCopyTables_dataset')]",
+				"[concat(variables('factoryId'), '/datasets/TARGETAzureSql_DS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/fact copy data from ADF db to ADLSgen2_copy1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Lookup get all table  names  from ms aql server",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "AlltablesDB_dataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "Filter",
+						"type": "Filter",
+						"dependsOn": [
+							{
+								"activity": "Lookup get all table  names  from ms aql server",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Lookup get all table  names  from ms aql server').output.value",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@startswith(item().Table_Name,'Fact')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "copy Fact data from sql server o adls  gen2",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Filter",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Filter').output.Value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Copy data from sql server dim tables",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlServerSource",
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".txt"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "MSserveverCopyTables_dataset",
+											"type": "DatasetReference",
+											"parameters": {
+												"copyTableNames": {
+													"value": "@item().Table_Name",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "Target_ADLSgen2_dataset",
+											"type": "DatasetReference",
+											"parameters": {
+												"P_DSFileName": {
+													"value": "@concat(item().Table_Name,'.csv')",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"Tablenames": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-04-04T14:06:18Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/AlltablesDB_dataset')]",
+				"[concat(variables('factoryId'), '/datasets/MSserveverCopyTables_dataset')]",
+				"[concat(variables('factoryId'), '/datasets/Target_ADLSgen2_dataset')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AlltablesDB_dataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SqlServer_linkedservice",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [
+					{
+						"name": "Table_Name",
+						"type": "nvarchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "TableName"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SqlServer_linkedservice')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureFactTAbles')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ADLSgen2linkedservice",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "FactInternetSales.csv",
+						"folderPath": "FACT Folder",
+						"fileSystem": "input-backup"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": ""
+				},
+				"schema": [
+					{
+						"name": "ProductKey",
+						"type": "String"
+					},
+					{
+						"name": "OrderDateKey",
+						"type": "String"
+					},
+					{
+						"name": "DueDateKey",
+						"type": "String"
+					},
+					{
+						"name": "ShipDateKey",
+						"type": "String"
+					},
+					{
+						"name": "CustomerKey",
+						"type": "String"
+					},
+					{
+						"name": "PromotionKey",
+						"type": "String"
+					},
+					{
+						"name": "CurrencyKey",
+						"type": "String"
+					},
+					{
+						"name": "SalesTerritoryKey",
+						"type": "String"
+					},
+					{
+						"name": "SalesOrderNumber",
+						"type": "String"
+					},
+					{
+						"name": "SalesOrderLineNumber",
+						"type": "String"
+					},
+					{
+						"name": "RevisionNumber",
+						"type": "String"
+					},
+					{
+						"name": "OrderQuantity",
+						"type": "String"
+					},
+					{
+						"name": "UnitPrice",
+						"type": "String"
+					},
+					{
+						"name": "ExtendedAmount",
+						"type": "String"
+					},
+					{
+						"name": "UnitPriceDiscountPct",
+						"type": "String"
+					},
+					{
+						"name": "DiscountAmount",
+						"type": "String"
+					},
+					{
+						"name": "ProductStandardCost",
+						"type": "String"
+					},
+					{
+						"name": "TotalProductCost",
+						"type": "String"
+					},
+					{
+						"name": "SalesAmount",
+						"type": "String"
+					},
+					{
+						"name": "TaxAmt",
+						"type": "String"
+					},
+					{
+						"name": "Freight",
+						"type": "String"
+					},
+					{
+						"name": "CarrierTrackingNumber",
+						"type": "String"
+					},
+					{
+						"name": "CustomerPONumber",
+						"type": "String"
+					},
+					{
+						"name": "OrderDate",
+						"type": "String"
+					},
+					{
+						"name": "DueDate",
+						"type": "String"
+					},
+					{
+						"name": "ShipDate",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ADLSgen2linkedservice')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Azureemployeedataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabaselinkedservice",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Surrogatekey",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "id",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "name",
+						"type": "nvarchar"
+					},
+					{
+						"name": "gender",
+						"type": "nvarchar"
+					},
+					{
+						"name": "country",
+						"type": "nvarchar"
+					},
+					{
+						"name": "isActive",
+						"type": "int",
+						"precision": 10
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Employee"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabaselinkedservice')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/MSserveverCopyTables_dataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SqlServer_linkedservice",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"copyTableNames": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": {
+						"value": "@dataset().copyTableNames",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SqlServer_linkedservice')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/NTemployee_dataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "subhaniStorage_Linkedservice",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "NTemployees.txt",
+						"folderPath": "Employee",
+						"container": "syed-container"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "id",
+						"type": "String"
+					},
+					{
+						"name": "name",
+						"type": "String"
+					},
+					{
+						"name": "gender",
+						"type": "String"
+					},
+					{
+						"name": "country",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/subhaniStorage_Linkedservice')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TARGETAzureSql_DS')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Azureemployeedataset",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"p_azureTablename": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Employee"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Azureemployeedataset')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Target_ADLSgen2_dataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ADLSgen2linkedservice",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"P_DSFileName": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().P_DSFileName",
+							"type": "Expression"
+						},
+						"folderPath": "FACT Folder",
+						"fileSystem": "input-backup"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": ""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ADLSgen2linkedservice')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ADLSgen2linkedservice')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('ADLSgen2linkedservice_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('ADLSgen2linkedservice_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlDatabaselinkedservice')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('AzureSqlDatabaselinkedservice_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Azureemployeedataset')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('Azureemployeedataset_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SqlServer_linkedservice')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "SqlServer",
+				"typeProperties": {
+					"connectionString": "[parameters('SqlServer_linkedservice_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "selfhost-IR-SUBHANI-DEMO-ADF",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/selfhost-IR-SUBHANI-DEMO-ADF')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/subhaniStorage_Linkedservice')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('subhaniStorage_Linkedservice_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/integrationRuntime1')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "SelfHosted",
+				"typeProperties": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/selfhost-IR-SUBHANI-DEMO-ADF')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "SelfHosted",
+				"typeProperties": {
+					"linkedInfo": {
+						"resourceId": "[parameters('selfhost-IR-SUBHANI-DEMO-ADF_properties_typeProperties_linkedInfo_resourceId')]",
+						"authorizationType": "Rbac"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Joins')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "AzureFactTAbles",
+								"type": "DatasetReference"
+							},
+							"name": "factinternetTable"
+						},
+						{
+							"linkedService": {
+								"referenceName": "ADLSgen2linkedservice",
+								"type": "LinkedServiceReference"
+							},
+							"name": "dimCustomer"
+						},
+						{
+							"linkedService": {
+								"referenceName": "ADLSgen2linkedservice",
+								"type": "LinkedServiceReference"
+							},
+							"name": "dimproductcategory"
+						},
+						{
+							"linkedService": {
+								"referenceName": "ADLSgen2linkedservice",
+								"type": "LinkedServiceReference"
+							},
+							"name": "dimproductsubcategory"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "ADLSgen2linkedservice",
+								"type": "LinkedServiceReference"
+							},
+							"name": "ADLSgen2"
+						}
+					],
+					"transformations": [
+						{
+							"name": "join1"
+						},
+						{
+							"name": "join2"
+						},
+						{
+							"name": "join3"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          ProductKey as string,",
+						"          OrderDateKey as string,",
+						"          DueDateKey as string,",
+						"          ShipDateKey as string,",
+						"          CustomerKey as integer,",
+						"          PromotionKey as string,",
+						"          CurrencyKey as string,",
+						"          SalesTerritoryKey as string,",
+						"          SalesOrderNumber as string,",
+						"          SalesOrderLineNumber as integer,",
+						"          RevisionNumber as string,",
+						"          OrderQuantity as string,",
+						"          UnitPrice as string,",
+						"          ExtendedAmount as string,",
+						"          UnitPriceDiscountPct as string,",
+						"          DiscountAmount as string,",
+						"          ProductStandardCost as string,",
+						"          TotalProductCost as string,",
+						"          SalesAmount as string,",
+						"          TaxAmt as string,",
+						"          Freight as string,",
+						"          CarrierTrackingNumber as string,",
+						"          CustomerPONumber as string,",
+						"          OrderDate as string,",
+						"          DueDate as string,",
+						"          ShipDate as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> factinternetTable",
+						"source(output(",
+						"          CustomerKey as short,",
+						"          GeographyKey as short,",
+						"          CustomerAlternateKey as string,",
+						"          Title as string,",
+						"          FirstName as string,",
+						"          MiddleName as string,",
+						"          LastName as string,",
+						"          NameStyle as boolean,",
+						"          BirthDate as string,",
+						"          MaritalStatus as string,",
+						"          Suffix as string,",
+						"          Gender as string,",
+						"          EmailAddress as string,",
+						"          YearlyIncome as double,",
+						"          TotalChildren as short,",
+						"          NumberChildrenAtHome as short,",
+						"          EnglishEducation as string,",
+						"          SpanishEducation as string,",
+						"          FrenchEducation as string,",
+						"          EnglishOccupation as string,",
+						"          SpanishOccupation as string,",
+						"          FrenchOccupation as string,",
+						"          HouseOwnerFlag as boolean,",
+						"          NumberCarsOwned as short,",
+						"          AddressLine1 as string,",
+						"          AddressLine2 as string,",
+						"          Phone as string,",
+						"          DateFirstPurchase as string,",
+						"          CommuteDistance as string",
+						"     ),",
+						"     useSchema: false,",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'delimited',",
+						"     fileSystem: 'input-backup',",
+						"     folderPath: 'DIM Folder',",
+						"     fileName: 'DimCustomer.csv',",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '',",
+						"     columnNamesAsHeader: true) ~> dimCustomer",
+						"source(output(",
+						"          ProductCategoryKey as short,",
+						"          ProductCategoryAlternateKey as short,",
+						"          EnglishProductCategoryName as string,",
+						"          SpanishProductCategoryName as string,",
+						"          FrenchProductCategoryName as string",
+						"     ),",
+						"     useSchema: false,",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'delimited',",
+						"     fileSystem: 'input-backup',",
+						"     folderPath: 'DIM Folder',",
+						"     fileName: 'DimProductCategory.csv',",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '\\\"',",
+						"     columnNamesAsHeader: true) ~> dimproductcategory",
+						"source(output(",
+						"          ProductSubcategoryKey as short,",
+						"          ProductSubcategoryAlternateKey as short,",
+						"          EnglishProductSubcategoryName as string,",
+						"          SpanishProductSubcategoryName as string,",
+						"          FrenchProductSubcategoryName as string,",
+						"          ProductCategoryKey as short",
+						"     ),",
+						"     useSchema: false,",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'delimited',",
+						"     fileSystem: 'input-backup',",
+						"     folderPath: 'DIM Folder',",
+						"     fileName: 'DimProductSubcategory.csv',",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '\\\"',",
+						"     columnNamesAsHeader: true) ~> dimproductsubcategory",
+						"factinternetTable, dimCustomer join(factinternetTable@CustomerKey == dimCustomer@CustomerKey,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> join1",
+						"dimproductcategory, dimproductsubcategory join(dimproductcategory@ProductCategoryKey == dimproductsubcategory@ProductCategoryKey,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> join2",
+						"join1, join2 join(SalesOrderLineNumber == dimproductcategory@ProductCategoryKey,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> join3",
+						"join3 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delimited',",
+						"     fileSystem: 'input-backup',",
+						"     folderPath: 'Backup',",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '',",
+						"     columnNamesAsHeader: true,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> ADLSgen2"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/AzureFactTAbles')]",
+				"[concat(variables('factoryId'), '/linkedServices/ADLSgen2linkedservice')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SCD type2')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "NTemployee_dataset",
+								"type": "DatasetReference"
+							},
+							"name": "NTemployee"
+						},
+						{
+							"dataset": {
+								"referenceName": "Azureemployeedataset",
+								"type": "DatasetReference"
+							},
+							"name": "Azureemployeetable"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Azureemployeedataset",
+								"type": "DatasetReference"
+							},
+							"name": "sinkAzuretable"
+						},
+						{
+							"dataset": {
+								"referenceName": "Azureemployeedataset",
+								"type": "DatasetReference"
+							},
+							"name": "sinkAzuretableupdated"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AzuretableNewNames"
+						},
+						{
+							"name": "ExistingRows"
+						},
+						{
+							"name": "AddingisActive"
+						},
+						{
+							"name": "filtertExistingRows"
+						},
+						{
+							"name": "TakingOnlyAzureTable"
+						},
+						{
+							"name": "AddingisActive0"
+						},
+						{
+							"name": "alterRow"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          id as integer,",
+						"          name as string,",
+						"          gender as string,",
+						"          country as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> NTemployee",
+						"source(output(",
+						"          Surrogatekey as integer,",
+						"          id as integer,",
+						"          name as string,",
+						"          gender as string,",
+						"          country as string,",
+						"          isActive as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> Azureemployeetable",
+						"Azureemployeetable select(mapColumn(",
+						"          ASQL_id = id,",
+						"          ASQL_name = name,",
+						"          ASQL_gender = gender,",
+						"          ASQL_country = country,",
+						"          ASQL_isActive = isActive,",
+						"          ASQL_Surrogatekey = Surrogatekey",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> AzuretableNewNames",
+						"NTemployee, AzuretableNewNames lookup(id == ASQL_id,",
+						"     multiple: false,",
+						"     pickup: 'any',",
+						"     broadcast: 'auto')~> ExistingRows",
+						"NTemployee derive(isActive = 1) ~> AddingisActive",
+						"ExistingRows filter(!isNull(ASQL_id)) ~> filtertExistingRows",
+						"filtertExistingRows select(mapColumn(",
+						"          ASQL_id,",
+						"          ASQL_name,",
+						"          ASQL_gender,",
+						"          ASQL_country,",
+						"          ASQL_isActive,",
+						"          ASQL_Surrogatekey",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> TakingOnlyAzureTable",
+						"TakingOnlyAzureTable derive(ASQL_isActive = 0) ~> AddingisActive0",
+						"AddingisActive0 alterRow(updateIf(1==1)) ~> alterRow",
+						"AddingisActive sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          Surrogatekey as integer,",
+						"          id as integer,",
+						"          name as string,",
+						"          gender as string,",
+						"          country as string,",
+						"          isActive as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     saveOrder: 2,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          id,",
+						"          name,",
+						"          gender,",
+						"          country,",
+						"          isActive",
+						"     )) ~> sinkAzuretable",
+						"alterRow sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          Surrogatekey as integer,",
+						"          id as integer,",
+						"          name as string,",
+						"          gender as string,",
+						"          country as string,",
+						"          isActive as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:false,",
+						"     updateable:true,",
+						"     upsertable:false,",
+						"     keys:['Surrogatekey'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     saveOrder: 1,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Surrogatekey = ASQL_Surrogatekey,",
+						"          id = ASQL_id,",
+						"          name = ASQL_name,",
+						"          gender = ASQL_gender,",
+						"          country = ASQL_country,",
+						"          isActive = ASQL_isActive",
+						"     )) ~> sinkAzuretableupdated"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/NTemployee_dataset')]",
+				"[concat(variables('factoryId'), '/datasets/Azureemployeedataset')]"
+			]
+		}
+	]
+}
