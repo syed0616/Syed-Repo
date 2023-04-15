@@ -1,0 +1,34 @@
+{
+	"name": "testdataset",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "subhaniStorage_Linkedservice",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "custid-3.txt",
+				"folderPath": "Customers",
+				"container": "customerdatails"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"type": "String"
+			},
+			{
+				"type": "String"
+			},
+			{
+				"type": "String"
+			}
+		]
+	}
+}
