@@ -1,0 +1,168 @@
+{
+	"name": "SCD type2",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "NTemployee_dataset",
+						"type": "DatasetReference"
+					},
+					"name": "NTemployee"
+				},
+				{
+					"dataset": {
+						"referenceName": "Azureemployeedataset",
+						"type": "DatasetReference"
+					},
+					"name": "Azureemployeetable"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Azureemployeedataset",
+						"type": "DatasetReference"
+					},
+					"name": "sinkAzuretable"
+				},
+				{
+					"dataset": {
+						"referenceName": "Azureemployeedataset",
+						"type": "DatasetReference"
+					},
+					"name": "sinkAzuretableupdated"
+				}
+			],
+			"transformations": [
+				{
+					"name": "AzuretableNewNames"
+				},
+				{
+					"name": "ExistingRows"
+				},
+				{
+					"name": "AddingisActive"
+				},
+				{
+					"name": "filtertExistingRows"
+				},
+				{
+					"name": "TakingOnlyAzureTable"
+				},
+				{
+					"name": "AddingisActive0"
+				},
+				{
+					"name": "alterRow"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          id as integer,",
+				"          name as string,",
+				"          gender as string,",
+				"          country as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> NTemployee",
+				"source(output(",
+				"          Surrogatekey as integer,",
+				"          id as integer,",
+				"          name as string,",
+				"          gender as string,",
+				"          country as string,",
+				"          isActive as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> Azureemployeetable",
+				"Azureemployeetable select(mapColumn(",
+				"          ASQL_id = id,",
+				"          ASQL_name = name,",
+				"          ASQL_gender = gender,",
+				"          ASQL_country = country,",
+				"          ASQL_isActive = isActive,",
+				"          ASQL_Surrogatekey = Surrogatekey",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> AzuretableNewNames",
+				"NTemployee, AzuretableNewNames lookup(id == ASQL_id,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> ExistingRows",
+				"NTemployee derive(isActive = 1) ~> AddingisActive",
+				"ExistingRows filter(!isNull(ASQL_id)) ~> filtertExistingRows",
+				"filtertExistingRows select(mapColumn(",
+				"          ASQL_id,",
+				"          ASQL_name,",
+				"          ASQL_gender,",
+				"          ASQL_country,",
+				"          ASQL_isActive,",
+				"          ASQL_Surrogatekey",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> TakingOnlyAzureTable",
+				"TakingOnlyAzureTable derive(ASQL_isActive = 0) ~> AddingisActive0",
+				"AddingisActive0 alterRow(updateIf(1==1)) ~> alterRow",
+				"AddingisActive sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Surrogatekey as integer,",
+				"          id as integer,",
+				"          name as string,",
+				"          gender as string,",
+				"          country as string,",
+				"          isActive as integer",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     saveOrder: 2,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          id,",
+				"          name,",
+				"          gender,",
+				"          country,",
+				"          isActive",
+				"     )) ~> sinkAzuretable",
+				"alterRow sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Surrogatekey as integer,",
+				"          id as integer,",
+				"          name as string,",
+				"          gender as string,",
+				"          country as string,",
+				"          isActive as integer",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:false,",
+				"     updateable:true,",
+				"     upsertable:false,",
+				"     keys:['Surrogatekey'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     saveOrder: 1,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Surrogatekey = ASQL_Surrogatekey,",
+				"          id = ASQL_id,",
+				"          name = ASQL_name,",
+				"          gender = ASQL_gender,",
+				"          country = ASQL_country,",
+				"          isActive = ASQL_isActive",
+				"     )) ~> sinkAzuretableupdated"
+			]
+		}
+	}
+}

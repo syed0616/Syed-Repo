@@ -1,0 +1,12 @@
+{
+	"name": "Azureemployeedataset",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"connectionString": "integrated security=False;encrypt=True;connection timeout=30;data source=syedserver.database.windows.net;initial catalog=AzureADF;user id=syed",
+			"encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIkRBVEFGQUNUT1JZQDY3RjJEQUQyLTFCRkItNDU5Qy1BOERCLTAxNzU0OTU2NTA5QV84ZTZkMTY1Ni00MzZjLTQ4ZWEtODc0NC0zNjY1MGJmZDUzYTYiDQp9"
+		}
+	}
+}

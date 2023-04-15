@@ -1,0 +1,25 @@
+{
+	"name": "MSserveverCopyTables_dataset",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SqlServer_linkedservice",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"copyTableNames": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": {
+				"value": "@dataset().copyTableNames",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

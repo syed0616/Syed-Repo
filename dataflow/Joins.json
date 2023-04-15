@@ -1,0 +1,202 @@
+{
+	"name": "Joins",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "AzureFactTAbles",
+						"type": "DatasetReference"
+					},
+					"name": "factinternetTable"
+				},
+				{
+					"linkedService": {
+						"referenceName": "ADLSgen2linkedservice",
+						"type": "LinkedServiceReference"
+					},
+					"name": "dimCustomer"
+				},
+				{
+					"linkedService": {
+						"referenceName": "ADLSgen2linkedservice",
+						"type": "LinkedServiceReference"
+					},
+					"name": "dimproductcategory"
+				},
+				{
+					"linkedService": {
+						"referenceName": "ADLSgen2linkedservice",
+						"type": "LinkedServiceReference"
+					},
+					"name": "dimproductsubcategory"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "ADLSgen2linkedservice",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ADLSgen2"
+				}
+			],
+			"transformations": [
+				{
+					"name": "join1"
+				},
+				{
+					"name": "join2"
+				},
+				{
+					"name": "join3"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          ProductKey as string,",
+				"          OrderDateKey as string,",
+				"          DueDateKey as string,",
+				"          ShipDateKey as string,",
+				"          CustomerKey as integer,",
+				"          PromotionKey as string,",
+				"          CurrencyKey as string,",
+				"          SalesTerritoryKey as string,",
+				"          SalesOrderNumber as string,",
+				"          SalesOrderLineNumber as integer,",
+				"          RevisionNumber as string,",
+				"          OrderQuantity as string,",
+				"          UnitPrice as string,",
+				"          ExtendedAmount as string,",
+				"          UnitPriceDiscountPct as string,",
+				"          DiscountAmount as string,",
+				"          ProductStandardCost as string,",
+				"          TotalProductCost as string,",
+				"          SalesAmount as string,",
+				"          TaxAmt as string,",
+				"          Freight as string,",
+				"          CarrierTrackingNumber as string,",
+				"          CustomerPONumber as string,",
+				"          OrderDate as string,",
+				"          DueDate as string,",
+				"          ShipDate as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> factinternetTable",
+				"source(output(",
+				"          CustomerKey as short,",
+				"          GeographyKey as short,",
+				"          CustomerAlternateKey as string,",
+				"          Title as string,",
+				"          FirstName as string,",
+				"          MiddleName as string,",
+				"          LastName as string,",
+				"          NameStyle as boolean,",
+				"          BirthDate as string,",
+				"          MaritalStatus as string,",
+				"          Suffix as string,",
+				"          Gender as string,",
+				"          EmailAddress as string,",
+				"          YearlyIncome as double,",
+				"          TotalChildren as short,",
+				"          NumberChildrenAtHome as short,",
+				"          EnglishEducation as string,",
+				"          SpanishEducation as string,",
+				"          FrenchEducation as string,",
+				"          EnglishOccupation as string,",
+				"          SpanishOccupation as string,",
+				"          FrenchOccupation as string,",
+				"          HouseOwnerFlag as boolean,",
+				"          NumberCarsOwned as short,",
+				"          AddressLine1 as string,",
+				"          AddressLine2 as string,",
+				"          Phone as string,",
+				"          DateFirstPurchase as string,",
+				"          CommuteDistance as string",
+				"     ),",
+				"     useSchema: false,",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'input-backup',",
+				"     folderPath: 'DIM Folder',",
+				"     fileName: 'DimCustomer.csv',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '',",
+				"     columnNamesAsHeader: true) ~> dimCustomer",
+				"source(output(",
+				"          ProductCategoryKey as short,",
+				"          ProductCategoryAlternateKey as short,",
+				"          EnglishProductCategoryName as string,",
+				"          SpanishProductCategoryName as string,",
+				"          FrenchProductCategoryName as string",
+				"     ),",
+				"     useSchema: false,",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'input-backup',",
+				"     folderPath: 'DIM Folder',",
+				"     fileName: 'DimProductCategory.csv',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> dimproductcategory",
+				"source(output(",
+				"          ProductSubcategoryKey as short,",
+				"          ProductSubcategoryAlternateKey as short,",
+				"          EnglishProductSubcategoryName as string,",
+				"          SpanishProductSubcategoryName as string,",
+				"          FrenchProductSubcategoryName as string,",
+				"          ProductCategoryKey as short",
+				"     ),",
+				"     useSchema: false,",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'input-backup',",
+				"     folderPath: 'DIM Folder',",
+				"     fileName: 'DimProductSubcategory.csv',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> dimproductsubcategory",
+				"factinternetTable, dimCustomer join(factinternetTable@CustomerKey == dimCustomer@CustomerKey,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join1",
+				"dimproductcategory, dimproductsubcategory join(dimproductcategory@ProductCategoryKey == dimproductsubcategory@ProductCategoryKey,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join2",
+				"join1, join2 join(SalesOrderLineNumber == dimproductcategory@ProductCategoryKey,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join3",
+				"join3 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'input-backup',",
+				"     folderPath: 'Backup',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '',",
+				"     columnNamesAsHeader: true,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> ADLSgen2"
+			]
+		}
+	}
+}

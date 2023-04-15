@@ -1,0 +1,22 @@
+{
+	"name": "AlltablesDB_dataset",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SqlServer_linkedservice",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [
+			{
+				"name": "Table_Name",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "TableName"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

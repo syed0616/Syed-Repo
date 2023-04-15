@@ -1,0 +1,22 @@
+{
+	"name": "TARGETAzureSql_DS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Azureemployeedataset",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"p_azureTablename": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "Employee"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,9 @@
+{
+	"name": "Subhani-demo-ADF",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "038f6c99-ec2b-4a08-88c3-fa7799d204b9",
+		"tenantId": "60eb7eb0-6810-4a51-bb3a-6ab325e5a25e"
+	}
+}

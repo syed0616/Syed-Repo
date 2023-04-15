@@ -1,0 +1,12 @@
+{
+	"name": "selfhost-IR-SUBHANI-DEMO-ADF",
+	"properties": {
+		"type": "SelfHosted",
+		"typeProperties": {
+			"linkedInfo": {
+				"resourceId": "/subscriptions/20b5af83-546b-4838-9230-f739b10b8dcb/resourcegroups/Test-demo/providers/Microsoft.DataFactory/factories/Syed-ADF/integrationruntimes/SelfHost-IR",
+				"authorizationType": "Rbac"
+			}
+		}
+	}
+}
